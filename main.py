@@ -6,10 +6,11 @@ import torch.nn as nn
 import yfinance as yf
 from sklearn.preprocessing import MinMaxScaler
 from datetime import datetime, timedelta
+
 # Define StockLSTM Model
 class StockLSTM(nn.Module):
-    def _init_(self, input_size, hidden_size, num_layers, output_size):
-        super(StockLSTM, self)._init_()
+    def __init__(self, input_size, hidden_size, num_layers, output_size):
+        super(StockLSTM, self).__init__()
         self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)
         self.fc = nn.Linear(hidden_size, output_size)
 
@@ -121,3 +122,45 @@ def simulate_trading(date_input):
     average_close = np.mean(nvda_predictions[1:6, 2])
 
     return actions, nvda_predictions[1:6], highest_price, lowest_price, average_close
+
+# Streamlit App
+st.title("SmartTrader Console")
+
+# Date picker input
+max_date = datetime.now().date() + timedelta(days=10)
+date_input = st.date_input("Assume today's date is:", value=datetime.now().date(), max_value=max_date)
+
+if st.button("Predict"):
+    try:
+        # Convert selected date to string format
+        date_input_str = date_input.strftime("%Y-%m-%d")
+
+        # Simulate trading
+        actions, nvda_predictions, highest_price, lowest_price, average_close = simulate_trading(date_input_str)
+
+        # Prepare DataFrame for highest, lowest, and average prices
+        df_summary = pd.DataFrame(
+            {
+                "Metric": ["Highest Price", "Lowest Price", "Average Closing Price"],
+                "Value": [highest_price, lowest_price, average_close],
+            }
+        )
+
+        # Prepare DataFrame for trading strategy
+        df_trading = pd.DataFrame(
+            {
+                "Day": [f"Day {i+1}" for i in range(5)],
+                "Action": actions
+            }
+        )
+
+        # Display summary table
+        st.write("### Predicted prices for the next five business days (in USD) are")
+        st.table(df_summary)
+
+        # Display trading strategy table
+        st.write("### Recommended Trading Strategy")
+        st.table(df_trading)
+
+    except Exception as e:
+        st.error(f"An error occurred: {e}")
