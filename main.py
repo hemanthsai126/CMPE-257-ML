@@ -142,7 +142,7 @@ if st.button("Predict"):
         df_summary = pd.DataFrame(
             {
                 "Metric": ["Highest Price", "Lowest Price", "Average Closing Price"],
-                "Value": [highest_price, lowest_price, average_close],
+                "Value": [f"{highest_price:.2f}", f"{lowest_price:.2f}", f"{average_close:.2f}"],
             }
         )
 
